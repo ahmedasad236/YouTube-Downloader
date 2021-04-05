@@ -11,4 +11,9 @@
 
 * With this Application you can download a playlist, too
 
+## Installation 
+
+```bash
+> sudo pip3 install -r requirements.txt
+```
 
