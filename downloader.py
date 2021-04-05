@@ -1,22 +1,41 @@
+'''Downloading youtube videos'''
 #Library for youtube downloader
 from pytube import YouTube, Playlist
+from rich import print
+from rich.console import Console
+from signal import signal,SIGINT 
+import sys
+from rich.panel import Panel
 
 running = True      #for the program flow
 
+console = Console() 
 def finish():       #trivial function for printing
     print("Download Done :)")
 
 def Downloading():  #trivial function for printing
     print("downloading...")
 
-print("********* Welcome to Youtube Downloader *********")
+def bye():
+      console.print(Panel.fit('''    [bold red]Thank YOU [/bold red][bold]for using  youtube downloader 
+        If you enjoy it, feel free to leave a [/bold][bold red]Star[/bold red]
+        [italic bold yellow]https://github.com/ahmedasad236/YouTube-Downloader[/italic bold yellow]
+        [italic cyan]Feedback and contribution is welcome as well :smiley:![/italic cyan]
+            ''', title="Bye!"), justify="center")
+def handler(signal_received, frame):
+    # Handle any cleanup here
+    print('\n[bold]SIGINT or CTRL-C detected. [red]Exiting gracefully[/red][/bold]')
+    bye()
+    sys.exit(0)
+
+console.rule("Welcome to Youtube Downloader")
 
 #program flow
 while running == True:
-
-    print("1- go to downloader")
+    signal(SIGINT, handler)
+    print("1- Go to Downloader")
     print("2- Exit")
-    q = input("Your choic: ") #Select an operation
+    q = input("Your choice: ") #Select an operation
     test = False   #check the choice
 
     if q == str(1) or q == str(2):
