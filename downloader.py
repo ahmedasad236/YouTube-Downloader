@@ -1,11 +1,11 @@
 '''Downloading youtube videos'''
-#Library for youtube downloader
 from pytube import YouTube, Playlist
 from rich import print
 from rich.console import Console
 from signal import signal,SIGINT 
 import sys
 from rich.panel import Panel
+from PyInquirer import  prompt
 
 running = True      #for the program flow
 
@@ -29,26 +29,40 @@ def handler(signal_received, frame):
     sys.exit(0)
 
 console.rule("Welcome to Youtube Downloader")
-
+questions = [
+        {
+            'type': 'input',
+            'name': 'username',
+            'message': 'Enter YouTube Video Url:',
+        }
+    ]
+questions_2 = [
+    {
+        'type': 'list',
+        'name': 'size',
+        'message': 'What  do you want?',
+        'choices': ["Go to Downloader", "Exit"]
+    }
+]
 #program flow
 while running == True:
     signal(SIGINT, handler)
-    print("1- Go to Downloader")
-    print("2- Exit")
-    q = input("Your choice: ") #Select an operation
+    q = list(prompt(questions_2).values())[0] #Select an operation
+    print(q)
     test = False   #check the choice
-
-    if q == str(1) or q == str(2):
+    # TODO USE PyInqureier
+    if q == "Go to Downloader" or q == "Exit":
         test = True
 
     while test == False:
         print("Invalid choice :(")
-        q = input("Your choic: ")
-        if q == str(1) or q == str(2):
+        q = list(prompt(questions_2).values())[0] #Select an operation
+        if q == "Go to Downloader" or q == "Exit":
             test = True
 
-    if q == str(1):
-        link = input("Enter your Link: ")
+    if q == "Go to Downloader":
+        link = list(prompt(questions).values())[0]
+        print(link)
 
         #Check The validity of the Link
         if "https://www.youtube.com" not in link:
