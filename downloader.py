@@ -1,13 +1,12 @@
 '''Downloading youtube videos'''
 from pytube import YouTube, Playlist
+from pytube.exceptions import VideoUnavailable
 from rich import print
 from rich.console import Console
 from signal import signal,SIGINT 
 import sys
 from rich.panel import Panel
 from PyInquirer import  prompt
-
-running = True      #for the program flow
 
 console = Console() 
 def finish():       #trivial function for printing
@@ -22,6 +21,8 @@ def bye():
         [italic bold yellow]https://github.com/ahmedasad236/YouTube-Downloader[/italic bold yellow]
         [italic cyan]Feedback and contribution is welcome as well :smiley:![/italic cyan]
             ''', title="Bye!"), justify="center")
+
+
 def handler(signal_received, frame):
     # Handle any cleanup here
     print('\n[bold]SIGINT or CTRL-C detected. [red]Exiting gracefully[/red][/bold]')
@@ -44,88 +45,68 @@ questions_2 = [
         'choices': ["Go to Downloader", "Exit"]
     }
 ]
-#program flow
-while running == True:
-    signal(SIGINT, handler)
-    q = list(prompt(questions_2).values())[0] #Select an operation
-    print(q)
-    test = False   #check the choice
-    # TODO USE PyInqureier
-    if q == "Go to Downloader" or q == "Exit":
-        test = True
 
-    while test == False:
-        print("Invalid choice :(")
-        q = list(prompt(questions_2).values())[0] #Select an operation
-        if q == "Go to Downloader" or q == "Exit":
-            test = True
+#video's information
+def video_info(video):
+    hours = video.length // 3600
+    minutes = (video.length - hours * 3600) // 60
+    seconds = video.length - minutes * 60
+    print("------------ video information ----------- ")
+    print(f"Video Title: \n{video.title}")
+    print(f"Video Length: {hours} : {minutes} : {seconds}")
+    print(f"Video Views: {video.views}")
 
-    if q == "Go to Downloader":
-        link = list(prompt(questions).values())[0]
-        print(link)
 
-        #Check The validity of the Link
-        if "https://www.youtube.com" not in link:
-            print("Error: Invalid Link :(")
 
-        else:
-            # Download a plyalist
-            if "playlist" in link:
-                plist = Playlist(link)
-                print(f'Downloading: {plist.title}')
-                for url in plist.video_urls:
-                    #check the validity of each video in the list
-                    try:
-                        yt = YouTube(url)
-                    except VideoUnavailable:
-                        print(f'Video {url} is unavaialable, skipping.')
-                    else:
-                        #downloding
-                        print(f'Downloading video: {url}')
-                        yt.streams.first().download()
+# print what user wants
+def print_what_he_want(video, char):
+    if char == "A".lower():
+        for stream in video.streams.filter(only_audio=True):
+            print(stream)
 
-            # Download only one video
+    elif char == "V".lower():
+        for stream in video.streams.filter(only_video=True):
+            print(stream)
+
+    elif char == "B".lower():
+        for stream in video.streams.filter(progressive=True):
+            print(stream)
+
+
+# Download his Selection
+def Download_selected(video):
+    it = input("Enter the itag of your choice:")
+    video.streams.get_by_itag(it).download()
+    video.register_on_complete_callback(finish())
+    video.register_on_progress_callback(Downloading())
+    print("-----------------------------------------------")
+
+# Donload a playlist
+def Download_playlist(link):
+    if "playlist" in link:
+        plist = Playlist(link)
+        print(f'Downloading: {plist.title}')
+        for url in plist.video_urls:
+            #check the validity of each video in the list
+            try:
+                yt = YouTube(url)
+            except VideoUnavailable:
+                print(f'Video {url} is unavaialable, skipping.')
             else:
-                try:
-                    video = YouTube(link)
-                except VideoUnavailable:
-                    print(f'Video {url} is unavaialable')
-                else:
-                    #video's information
-                    hours = video.length // 3600
-                    minutes = (video.length - hours * 3600) // 60
-                    seconds = video.length - minutes * 60
-                    print("------------ video information ----------- ")
-                    print(f"Video Title: \n{video.title}")
-                    print(f"Video Length: {hours} : {minutes} : {seconds}")
-                    print(f"Video Views: {video.views}")
-                    char = input("v --> vidoes only \na --> audios only \nb --> both\n:")
-                    # Printing what he wants
-                    if char == "A".lower():
-                        for stream in video.streams.filter(only_audio=True):
-                            print(stream)
+                #downloding
+                print(f'Downloading video: {url}')
+                yt.streams.first().download()
 
-                    elif char == "V".lower():
-                        for stream in video.streams.filter(only_video=True):
-                            print(stream)
 
-                    elif char == "B".lower():
-                        for stream in video.streams.filter(progressive=True):
-                            print(stream)
-
-                    #download his selection
-                    it = input("Enter the itag of your choice:")
-                    video.streams.get_by_itag(it).download()
-                    video.register_on_complete_callback(finish())
-                    video.register_on_progress_callback(Downloading())
-                    print("-----------------------------------------------")
-
-                    #Asking for continuing
-                    choice = input("Download anything else?(y/n)")
-                    if choice == "y" or choice == "Y" or choice == "YES".lower():
-                        running = True
-                    else:
-                        running = False
+def Download_video(link):
+    try:
+        video = YouTube(link)
+    except VideoUnavailable:
+        print(f'Video {video.url} is unavaialable')
     else:
-        print("------------ Thank you :) --------------")
-        running = False
+        video_info(video)
+        char = input("v --> vidoes only \na --> audios only \nb --> both\n:")
+        print_what_he_want(video, char)
+        Download_selected(video)
+
+
